@@ -10,9 +10,9 @@ import (
 )
 
 func ConnectDB() *mongo.Client{
-	err:=godotenv.Load(".env")
+	err:=godotenv.Load("../../.env")
 	if err!=nil{
-		log.Println("Failed to load the enviroment variables")
+		log.Fatalf("Failed to load the enviroment variables, %v",err)
 	}
 	mongo_url:=os.Getenv("MONGODB_URI")
 	if mongo_url==""{
