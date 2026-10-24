@@ -10,18 +10,18 @@ import (
 )
 
 
-func ManageJos(job job.Job, jobQueue queue.Queue) gin.HandlerFunc{
+func ManageJos(job job.Job, jobQueue queue.Queue, scheduler *queue.Scheduler) gin.HandlerFunc{
 	return func(ctx *gin.Context) {
 		if IsAllowedTime(){
 			if err:=queue.Enque(jobQueue,job);err!=nil{
-				if err:=queue.ScheduleQueueJobs(jobQueue, job);err!=nil{
+				if err:=scheduler.ScheduleQueueJobs(jobQueue, job);err!=nil{
 				ctx.JSON(http.StatusInternalServerError,gin.H{"error":"Couldn't schedule the job","details":err})
 				return 
 				}
 			}
 			ctx.JSON(http.StatusCreated,gin.H{"Details":"Job Enqueued!"})
 		} else {
-			if err:=queue.ScheduleTimedJobs(jobQueue, job, time.Now());err!=nil{
+			if err:=scheduler.ScheduleTimedJobs(jobQueue, job, time.Now());err!=nil{
 				ctx.JSON(http.StatusInternalServerError,gin.H{"error":"Couldn't schedule the job","details":err})
 				return 
 			}

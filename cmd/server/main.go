@@ -36,7 +36,9 @@ func main() {
 	log.Println("MongoDB connected successfully!")
 
 	jobQueue:=queue.CreateQueue(50)
-	
+
+	scheduler:=queue.NewScheduler()
+
 	defer func() {
 		if err := client.Disconnect(context.Background()); err != nil {
 			log.Fatalf("Failed to disconnect from MongoDB: %v", err)
@@ -48,7 +50,7 @@ func main() {
 		Handler: router,
 	}
 
-	router.POST("/jobs", producer.ProduceJobs(jobQueue))
+	router.POST("/jobs", producer.ProduceJobs(jobQueue, scheduler))
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server couldn't be connected!!")

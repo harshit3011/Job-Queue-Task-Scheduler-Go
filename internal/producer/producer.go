@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func ProduceJobs(jobQueue queue.Queue) gin.HandlerFunc {
+func ProduceJobs(jobQueue queue.Queue, scheduler *queue.Scheduler) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var jobRequest job.JobCreation
 
@@ -46,7 +46,7 @@ func ProduceJobs(jobQueue queue.Queue) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(http.StatusCreated, result)
-		manageHandler := manager.ManageJos(newJob,jobQueue)
+		manageHandler := manager.ManageJos(newJob,jobQueue,scheduler)
 		manageHandler(ctx)
 	}
 }
