@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/job"
+	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/producer"
+	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/queue"
 	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/storage/mongo"
 	"github.com/joho/godotenv"
 )
@@ -34,6 +35,8 @@ func main() {
 	}
 	log.Println("MongoDB connected successfully!")
 
+	jobQueue:=queue.CreateQueue(50)
+	
 	defer func() {
 		if err := client.Disconnect(context.Background()); err != nil {
 			log.Fatalf("Failed to disconnect from MongoDB: %v", err)
@@ -45,7 +48,7 @@ func main() {
 		Handler: router,
 	}
 
-	router.POST("/jobs", job.ProduceJobs())
+	router.POST("/jobs", producer.ProduceJobs(jobQueue))
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server couldn't be connected!!")
