@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -9,37 +9,33 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func ConnectDB() *mongo.Client{
-	err:=godotenv.Load("../../.env")
-	if err!=nil{
-		log.Fatalf("Failed to load the enviroment variables, %v",err)
+func ConnectDB() (*mongo.Client, error) {
+	_ = godotenv.Load("../../.env")
+	mongoURL := os.Getenv("MONGODB_URI")
+	if mongoURL == "" {
+		return nil, fmt.Errorf("MONGODB_URI is not set")
 	}
-	mongo_url:=os.Getenv("MONGODB_URI")
-	if mongo_url==""{
-		log.Fatal("Mongo URL not set")
+
+	mongoOptions := options.Client().ApplyURI(mongoURL)
+	client, err := mongo.Connect(mongoOptions)
+	if err != nil {
+		return nil, fmt.Errorf("connect to MongoDB: %w", err)
 	}
-	mongoOptions:=options.Client().ApplyURI(mongo_url)
-	client, err:=mongo.Connect(mongoOptions)
-	if err!=nil{
-		log.Fatalf("Failed the mongo client: %v",err)
-	}
-	return client
+	return client, nil
 }
 
 var Client *mongo.Client
 
-func OpenCollection(collection string,client *mongo.Client) *mongo.Collection{
-	err:=godotenv.Load(".env")
-	if err!=nil{
-		log.Println("Failed to load the enviroment variables")
+func OpenCollection(collection string, client *mongo.Client) (*mongo.Collection, error) {
+	if client == nil {
+		return nil, fmt.Errorf("MongoDB client is not initialized")
 	}
-	db_name:=os.Getenv("DATABASE_NAME")
-	if db_name==""{
-		log.Fatal("Database name not set or Database doesn't exist")
+	dbName := os.Getenv("DATABASE_NAME")
+	if dbName == "" {
+		return nil, fmt.Errorf("DATABASE_NAME is not set")
 	}
-	cln:=client.Database(db_name).Collection(collection)
-	if cln==nil{
-		return nil
+	if collection == "" {
+		return nil, fmt.Errorf("collection name is empty")
 	}
-	return cln
+	return client.Database(dbName).Collection(collection), nil
 }

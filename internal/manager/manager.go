@@ -1,44 +1,35 @@
 package manager
 
 import (
-	"net/http"
+	"fmt"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/job"
 	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/queue"
 )
 
-
-func ManageJos(job job.Job, jobQueue queue.Queue, scheduler *queue.Scheduler) gin.HandlerFunc{
-	return func(ctx *gin.Context) {
-		if IsAllowedTime(){
-			if err:=queue.Enque(jobQueue,job);err!=nil{
-				if err:=scheduler.ScheduleQueueJobs(jobQueue, job);err!=nil{
-				ctx.JSON(http.StatusInternalServerError,gin.H{"error":"Couldn't schedule the job","details":err})
-				return 
-				}
-			}
-			ctx.JSON(http.StatusCreated,gin.H{"Details":"Job Enqueued!"})
-		} else {
-			if err:=scheduler.ScheduleTimedJobs(jobQueue, job, time.Now());err!=nil{
-				ctx.JSON(http.StatusInternalServerError,gin.H{"error":"Couldn't schedule the job","details":err})
-				return 
-			}
-			ctx.JSON(http.StatusCreated,gin.H{"Details":"Job Enqueued!"})
-		}
+func ManageJob(job job.Job, jobQueue queue.Queue, scheduler *queue.Scheduler) error {
+	if scheduler == nil {
+		return fmt.Errorf("scheduler is not initialized")
 	}
+	if IsAllowedTime() {
+		if err := queue.Enque(jobQueue, job); err != nil {
+			return scheduler.ScheduleQueueJobs(job)
+		}
+		return nil
+	}
+	return scheduler.ScheduleTimedJobs(job, time.Now())
 }
 
-func IsAllowedTime() bool{
+func IsAllowedTime() bool {
 	now := time.Now()
 
-	allowedStart:= time.Date(now.Year(),now.Month(),now.Day(),9,0,0,0,now.Location())
-	allowedEnd:=time.Date(now.Year(),now.Month(),now.Day(),18,0,0,0,now.Location())
+	allowedStart := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Location())
+	allowedEnd := time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, now.Location())
 
-	if !now.Before(allowedStart) && !now.After(allowedEnd){
+	if !now.Before(allowedStart) && !now.After(allowedEnd) {
 		return true
-	} else{
+	} else {
 		return false
 	}
 }

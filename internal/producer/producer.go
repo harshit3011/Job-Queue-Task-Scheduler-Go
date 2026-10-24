@@ -23,9 +23,9 @@ func ProduceJobs(jobQueue queue.Queue, scheduler *queue.Scheduler) gin.HandlerFu
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload", "details": err})
 			return
 		}
-		jobsCollection := mongo.OpenCollection("jobs", mongo.Client)
-		if jobsCollection == nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "No such collection exists", "details": err})
+		jobsCollection, err := mongo.OpenCollection("jobs", mongo.Client)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to access jobs collection", "details": err.Error()})
 			return
 		}
 		var newJob job.Job
@@ -45,8 +45,14 @@ func ProduceJobs(jobQueue queue.Queue, scheduler *queue.Scheduler) gin.HandlerFu
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create a new job", "details": err})
 			return
 		}
+		if err := manager.ManageJob(newJob, jobQueue, scheduler); err != nil {
+			ctx.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   "Job was saved but could not be scheduled",
+				"details": err.Error(),
+				"job":     result,
+			})
+			return
+		}
 		ctx.JSON(http.StatusCreated, result)
-		manageHandler := manager.ManageJos(newJob,jobQueue,scheduler)
-		manageHandler(ctx)
 	}
 }
