@@ -33,18 +33,3 @@ func (e Executor) Execute(job job.Job) error{
 	}
 	return handler(job.Payload)
 }
-
-// executorInstance := executor.NewExecutor()
-
-// executorInstance.Register("PRINT", func(payload json.RawMessage) error {
-// 	var data struct {
-// 		Message string `json:"message"`
-// 	}
-
-// 	if err := json.Unmarshal(payload, &data); err != nil {
-// 		return err
-// 	}
-
-// 	fmt.Println(data.Message)
-// 	return nil
-// })

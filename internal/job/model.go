@@ -12,6 +12,8 @@ const (
 	StatusPending    = "PENDING"
 	StatusProcessing = "PROCESSING"
 	StatusDelayed    = "DELAYED"
+	StatusCompleted  = "COMPLETED"
+	StatusFailed     = "FAILED"
 )
 
 const (
