@@ -17,15 +17,15 @@ import (
 
 func main() {
 	router := gin.Default()
-	err:=godotenv.Load("../../.env")
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatal("No .env file found, using environment variables")
 	}
-	client:=mongo.ConnectDB()
-	mongo.Client=client
-	port:= os.Getenv("PORT")
-	if port==""{
-		port="8081"
+	client := mongo.ConnectDB()
+	mongo.Client = client
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
 	}
 	err = client.Ping(context.Background(), nil)
 
@@ -40,21 +40,21 @@ func main() {
 		}
 	}()
 
-	server:=&http.Server{
-		Addr: ":"+port,
+	server := &http.Server{
+		Addr:    ":" + port,
 		Handler: router,
 	}
 
-	router.POST("/jobs",job.ProduceJobs())
-	go func(){
-		if err:=server.ListenAndServe();err!=nil && err!=http.ErrServerClosed{
+	router.POST("/jobs", job.ProduceJobs())
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server couldn't be connected!!")
 		}
 	}()
 
-	quit:=make(chan os.Signal,1)
+	quit := make(chan os.Signal, 1)
 
-	signal.Notify(quit,os.Interrupt,syscall.SIGTERM)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
 	log.Println("Shutting down server...")
