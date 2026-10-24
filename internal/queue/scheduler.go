@@ -50,3 +50,25 @@ func (s *Scheduler) ScheduleTimedJobs(jobQueue Queue, job job.Job, t time.Time) 
 	heap.Push(s.TimedJobs, &timedJob)
 	return nil
 }
+
+func (s *Scheduler) Run(jobQueue Queue) {
+	for range jobQueue.capacityAvailable {
+		for {
+			s.mu.Lock()
+
+			if s.WaitingJobs.Len() == 0 {
+				s.mu.Unlock()
+				break
+			}
+
+			j := heap.Pop(s.WaitingJobs).(job.Job)
+			s.mu.Unlock()
+			if err := Enque(jobQueue, j); err != nil {
+				s.mu.Lock()
+				heap.Push(s.WaitingJobs, j)
+				s.mu.Unlock()
+				break
+			}
+		}
+	}
+}
