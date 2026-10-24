@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/executor"
 	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/producer"
 	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/queue"
 	"github.com/harshit3011/Job-Queue-Task-Scheduler-Go/internal/storage/mongo"
@@ -38,6 +41,19 @@ func main() {
 	jobQueue:=queue.CreateQueue(50)
 
 	scheduler:=queue.NewScheduler()
+
+	executorInstance := executor.NewExecutor()
+
+	executorInstance.RegisterExecutor("PRINT",func(rm json.RawMessage) error {
+		var data struct{
+			Message string `json:"message"`
+		}
+		if err:= json.Unmarshal(rm,&data);err!=nil{
+			return err
+		}
+		fmt.Printf("Processed the job: %s\n",data.Message)
+		return nil
+	})
 
 	defer func() {
 		if err := client.Disconnect(context.Background()); err != nil {
