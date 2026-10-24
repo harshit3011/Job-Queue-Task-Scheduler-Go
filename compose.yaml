@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+    environment:
+      PORT: "8081"
+      MONGODB_URI: mongodb://mongo:27017
+      DATABASE_NAME: job_queue
+    ports:
+      - "${APP_PORT:-8081}:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:8.0
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mongo_data:

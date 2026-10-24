@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+!.env.example
+bin
+dist
+build
+*.exe
+*.test
